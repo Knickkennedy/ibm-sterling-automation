@@ -1,0 +1,54 @@
+---
+- name: "Cleanup directories and files"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ my_workdir }}/ibm-b2bi-prod-{{ compatibility_matrix[si_version].helm_version }}.tgz"
+
+- name: "Download Helm chart"
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/IBM/charts/master/repo/ibm-helm/ibm-b2bi-prod-{{ compatibility_matrix[si_version].helm_version }}.tgz"
+    dest: "{{ my_workdir }}/ibm-b2bi-prod-{{ compatibility_matrix[si_version].helm_version }}.tgz"
+    mode: "0666"
+  register: download_cout
+  until: download_cout is succeeded
+  retries: 3
+
+# - name: "Extract Helm chart"
+#   ansible.builtin.command: "tar -xzvf {{ my_workdir }}/ibm-b2bi-prod-{{ compatibility_matrix[si_version].helm_version }}.tgz -C {{ my_workdir }}"
+#   register: untar_cout
+#   changed_when: ( untar_cout.rc == 0)
+
+# TODO: migrate from Shell to module kubernetes.core.k8s
+#
+# Creating a Role Based Access Control (RBAC)
+# -----------------------------------------------------------------------------
+- name: "Creating a Role Based Access Control (RBAC)"
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('template', 'templates/default_sa_rbac.yml.j2') }}"
+
+# # Creating a Custom PodSecurityPolicy - Removed in Kubernetes v1.25
+# # -----------------------------------------------------------------------------
+# - name: "Creating a Custom PodSecurityPolicy"
+#   kubernetes.core.k8s:
+#     state: present
+#     definition: "{{ lookup('template', 'templates/custom_podsecplcy.yml.j2') }}"
+
+# - name: "Creating a Custom Role and Role Binding for the custom PodSecurityPolicy"
+#   kubernetes.core.k8s:
+#     state: present
+#     definition: "{{ lookup('template', 'templates/custom_podsecplcy_rbac.yml.j2') }}"
+
+# # Creating a Custom SecurityContextConstraints definition - Removed in Kubernetes v1.25
+# # -----------------------------------------------------------------------------
+# - name: "Creating a Custom SecurityContextConstraints"
+#   kubernetes.core.k8s:
+#     state: present
+#     definition: "{{ lookup('template', 'templates/custom_secctxtcons.yml.j2') }}"
+
+# - name: "Creating a Custom Role and Role Binding for the custom PodSecurityPolicy"
+#   kubernetes.core.k8s:
+#     state: present
+#     definition: "{{ lookup('template', 'templates/custom_podsecplcy_rbac.yml.j2') }}"

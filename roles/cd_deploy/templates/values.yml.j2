@@ -1,0 +1,167 @@
+license: true
+licenseType: "{{ cd_license_type }}"
+env:
+  timezone: "UTC"
+  extraEnvs: []
+
+extraLabels: {}
+
+replicaCount: 1
+
+image:
+  repository: "{{ compatibility_matrix[cd_version].image_repository }}"
+  tag: "{{ compatibility_matrix[cd_version].image_tag }}"
+  imageSecrets: "{{ cd_deploy_registry_secret }}"
+  digest:
+    enabled: false
+    value: ""
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+
+upgradeCompCheck: {{ cd_other_values.upgradeCompCheck | default('false') }}
+
+extraVolumeMounts: []
+
+extraVolume: []
+
+arch: "amd64"
+
+cdArgs:
+  nodeName: "{{ cd_nodename }}"
+  crtName: "cdcert.pem"
+  localCertLabel: "Client-API"
+  cport: 1363
+  sport: 1364
+  configDir: "CDFILES"
+  saclConfig: "n"
+  trustedAddr: []
+
+sum:
+  enabled: "{{ 'y' if (cd_deploy_sum_enabled == 1) else 'n' }}"
+
+oum:
+  enabled: "y"
+
+storageSecurity:
+  fsGroup: 45678
+  supplementalGroups: [65534]
+  runAsUser: 45678
+  runAsGroup: 45678
+
+persistence:
+  enabled: true
+  useDynamicProvisioning: {{ cd_other_values.persistence.useDynamicProvisioning }}
+
+pvClaim:
+  existingClaimName: "{{ cd_other_values.pvClaim.existingClaimName | default('') }}"
+  storageClassName: "{{ storage_class_matrix[ cd_storage_class ].rwo }}"  
+  accessMode: "ReadWriteOnce"
+  selector:
+    label: "intent"
+    value: "cd-vol"
+  size: {{ cd_storage_capacity }}
+
+service:
+  type: "LoadBalancer"
+  apiport:
+    name: "api"
+    port:
+    protocol: "TCP"
+  ftport:
+    name: "ft"
+    port:
+    protocol: "TCP"
+  externalIP: []
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  annotations: {}
+  externalTrafficPolicy: ""
+  sessionAffinity: "ClientIP"
+
+networkPolicyIngress:
+  enabled: false
+  from: 
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: "connectdirect"
+
+networkPolicyEgress:
+  enabled: true
+  acceptNetPolChange: true
+  to: []
+
+secret:
+  secretName: "{{ cd_deploy_secret }}"
+  certSecretName: "{{ cd_deploy_cert_secret }}"
+
+serviceAccount:
+{% if cd_other_values.serviceAccount.name is defined and cd_other_values.serviceAccount.name != "" %}
+  create: false
+  name: {{ cd_other_values.serviceAccount.name }}
+{% else %}
+  create: true
+{% endif %}
+
+resources:
+  limits:
+    cpu: {{ cd_cpu_limits }}
+    memory: {{ cd_mem_limits }}
+    ephemeral-storage: "{{ cd_ephemeral_storage_limits }}"
+  requests:
+    cpu: {{ cd_cpu_requests }}
+    memory: {{ cd_mem_requests }}
+    ephemeral-storage: "{{ cd_ephemeral_storage_requests }}"
+
+dashboard:
+  enabled: {{ cd_other_values.dashboard.enabled | default('false') }}
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution: {}
+    preferredDuringSchedulingIgnoredDuringExecution: []
+  podAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution: []
+    preferredDuringSchedulingIgnoredDuringExecution: []
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution: []
+    preferredDuringSchedulingIgnoredDuringExecution: []
+
+startupProbe:
+  initialDelaySeconds: 30
+  timeoutSeconds: 5
+  periodSeconds: 10
+
+livenessProbe:
+  initialDelaySeconds: 5
+  timeoutSeconds: 5
+  periodSeconds: 10
+
+readinessProbe:
+  initialDelaySeconds: 3
+  timeoutSeconds: 5
+  periodSeconds: 10
+
+route:
+  enabled: true
+
+ldap:
+  enabled: {{ cd_other_values.ldap.enabled | default('false') }}
+{% if cd_other_values.ldap.enabled is defined and cd_other_values.ldap.enabled == "true" %}
+  host: "{{ cd_other_values.ldap.host }}"
+  port: {{ cd_other_values.ldap.port }}
+  domain: "{{ cd_other_values.ldap.domain  }}"
+  tls: {{ cd_other_values.ldap.tls }}
+  startTls: {{ cd_other_values.ldap.startTls }}
+  caCert: "{{ cd_other_values.ldap.caCert }}"
+  tlsReqcert: "{{ cd_other_values.ldap.tlsReqcert | default('never') }}"
+  defaultBindDn: "{{ cd_other_values.ldap.defaultBindDn }}"
+  defaultAuthtokType: "{{ cd_other_values.ldap.defaultAuthtokType }}"
+  defaultAuthtok: "{{ cd_other_values.ldap.defaultAuthtok }}"
+  clientValidation: {{ cd_other_values.ldap.clientValidation }}
+  clientCert: "{{ cd_other_values.ldap.clientCert | default('false') }}"
+  clientKey: "{{ cd_other_values.ldap.clientKey | default('false') }}"
+{% endif %}
+
+cdfa:
+  fileAgentEnable: "n"

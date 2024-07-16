@@ -1,0 +1,86 @@
+---
+- name: "Lookup Route from 'openshift-console' if provided"
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Route
+    name: "console"
+    namespace: "openshift-console"
+  register: oc_route_cout
+
+- name: Set Facts for JMS Configuration from mq_namespace
+  ansible.builtin.set_fact:
+    route_domain: "{{ oc_route_cout.resources[0].spec.host | regex_replace('.*console-openshift-console\\.', '') }}"
+
+- name: Define Sterling B2Bi helm chart values
+  ansible.builtin.set_fact:
+    si_helm_values:
+      setupCfg:
+        licenseAcceptEnableSfg: "true"
+        licenseAcceptEnableFileOperation: "true"
+        dbCreateSchema: "true"
+        defaultDocumentStorageType: "DB"
+      asi:
+        ingress:
+          internal:
+            host: "asi.{{ si_instanceid }}.{{ route_domain }}"
+      ac:
+        ingress:
+          internal:
+            host: "ac.{{ si_instanceid }}.{{ route_domain }}"
+      api:
+        ingress:
+          internal:
+            host: "api.{{ si_instanceid }}.{{ route_domain }}"
+      purge:
+        schedule: "0 0 * * *"
+
+- name: "Set fact helm file"
+  ansible.builtin.set_fact:
+    my_helmfile: "{{ my_workdir }}/ibm-b2bi-prod-{{ compatibility_matrix[si_version].helm_version }}.tgz"
+    my_valuesfile: "{{ my_workdir }}/myb2bi_values-{{ my_serial }}.yml"
+
+- name: Generate my_values.yml
+  ansible.builtin.template:
+    src: "values.yaml.j2"
+    dest: "{{ my_valuesfile }}"
+    mode: "0640"
+
+- name: Install Helm chart
+  kubernetes.core.helm:
+    name: s0
+    chart_ref: "{{ my_helmfile }}"
+    release_namespace: "{{ si_namespace }}"
+    timeout: "1h"
+    values_files:
+      - "{{ my_valuesfile }}"
+
+
+# - name: Debug
+#  ansible.builtin.debug:
+#    msg: "helm install --timeout 120m0s -f {{ my_valuesfile }} -n {{ si_namespace }} s0 {{ my_helmfile }}"
+#   msg: "helm install --timeout 120m0s -f {{ my_valuesfile }} -n {{ si_namespace }} s0 {{ my_helmfile }}"
+
+# - name: Run Helm install command
+#  ansible.builtin.command:
+#    cmd: "helm install --timeout 120m0s -f {{ my_valuesfile }} -n {{ si_namespace }} s0 {{ my_helmfile }}"
+#  when: not si_skip_helm
+# --wait
+
+# # https://docs.ansible.com/ansible/latest/collections/kubernetes/core/helm_module.html
+# - name: Deploy Connect:Direct chart from local path
+#   kubernetes.core.helm:
+#     name: "{{ si_helm_release }}"
+#     chart_ref: "{{ my_workdir }}/ibm-connect-direct/"
+#     release_namespace: "{{ si_namespace }}"
+#     wait: True
+#     timeout: "{{ si_helm_timeout }}"
+#     values_files:
+#       - "{{ my_workdir }}/myb2bi_values.yml"
+
+- name: "IBM Sterling B2Bi Summary:"
+  ansible.builtin.debug:
+    msg:
+      - "IBM Sterling B2Bi status .............................. Ready!"
+      - "IBM Sterling B2Bi namespace ........................... {{ si_namespace }}"
+      # - "Pod name ............................................ {{ si_pod_name }}"
+      # - "For username and password check secret .............. {{ si_secret }}'"

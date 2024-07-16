@@ -1,0 +1,6 @@
+---
+cb_namespace: "{{ lookup('env', 'CB_NAMESPACE') | default('cloudbeaver', true) }}"
+cb_admin: "{{ lookup('env', 'CB_ADMIN') | default('cbadmin', true) }}"
+cb_password: "{{ lookup('env', 'CB_PASSWORD') | default('passw0rd', true) }}"
+
+cb_labels: cloudbeaver

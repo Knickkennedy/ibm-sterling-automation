@@ -1,0 +1,84 @@
+---
+# Environment variables
+# -----------------------------------------------------------------------------------------------------------------
+itxa_instanceid: "{{ lookup('env', 'ITXA_INSTANCEID') }}"
+
+entitled_registry_key: "{{ lookup('env', 'ENTITLED_REGISTRY_KEY') }}"
+
+itxa_version: "{{ lookup('env', 'ITXA_VERSION') | default('10.0.1.9-x86_64', true) }}"
+
+itxa_admin_password: "{{ lookup('env', 'ITXA_ADMIN_PASSWORD') | default('passw0rd', true) }}"
+itxa_tls_keystore_password: "{{ lookup('env', 'ITXA_TLS_KEYSTORE_PASSWORD') | default('changeit', true) }}"
+
+itxa_license_type: "{{ lookup('env', 'ITXA_LICENSETYPE') | default('non-prod', true) }}" # prod or no-prod
+
+# Configure instance
+# -----------------------------------------------------------------------------
+entitled_registry: "cp.icr.io"
+entitled_registry_user: cp
+
+# Role Internal
+# -----------------------------------------------------------------------------
+itxa_namespace: "ibm-itxa-{{ itxa_instanceid }}-app"
+itxa_db_namespace: "ibm-itxa-{{ itxa_instanceid }}-db2"
+
+db2_namespace: ""
+db2_secret: mydb2-secret
+db2_id: mydb2
+
+my_workdir: /tmp
+
+itxa_registry_secret: ibm-registry-secret
+itxa_user_secret: itxa-user-secret
+itxa_db_secret: itxa-db-secret
+itxa_tls_secret: tls-itxa-secret
+itxa_svc_web: "s0-ibm-itxa-prod-itxauiserver"
+itxa_route_web: "itxa-web"
+
+# https://github.com/IBM/charts/tree/master/repo/ibm-helm
+compatibility_matrix:
+  10.0.1.9-x86_64:
+    helm_version: "1.0.2"
+    image_tag: "10.0.1.9-x86_64"
+    itx_image_tag: "10.1.2.0.20231130"
+
+
+# Storage Class Matrix
+# -----------------------------------------------------------------------------
+storage_class_matrix:
+  ibmcloud:
+    rwx: "ibmc-file-gold-gid"   # ReadWriteMany
+    rwx_nogid: "ibmc-file-gold" # ReadWriteMany no GID
+    rwo: "ibmc-file-gold-gid"   # ReadWriteOnce
+    rom: ""                     # ReadOnlyMany
+    rwop: ""                    # ReadWriteOncePod
+  redhat:
+    rwx: "ocs-storagecluster-cephfs"
+    rwx_nogid: "ocs-storagecluster-cephfs"
+    rwo: "ocs-storagecluster-ceph-rbd"
+    rom: ""
+    rwop: ""
+  aws:
+    rwx: "efs"
+    rwx_nogid: "efs"
+    rwo: "gp2"
+    rom: ""
+    rwop: ""
+  azure:
+    rwx: "azurefiles-premium"
+    rwx_nogid: "azurefiles-premium"
+    rwo: "managed-premium"
+    rom: ""
+    rwop: ""
+  techzone:
+    rwx: "managed-nfs-storage"
+    rwx_nogid: "managed-nfs-storage"
+    rwo: "managed-nfs-storage"
+    rom: "managed-nfs-storage"
+    rwop: "managed-nfs-storage"
+  ibm-spectrum:
+    rwx: "scale-cnsa"
+    rwx_nogid: "scale-cnsa"
+    rwo: "scale-cnsa"
+    rom: "scale-cnsa"
+    rwop: "scale-cnsa"

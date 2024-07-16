@@ -1,0 +1,164 @@
+---
+# Create Kubernetes namespace
+# -----------------------------------------------------------------------------
+- name: "Create namespace for DB2 DMC"
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ dmc_namespace }}"
+  register: cout
+
+# Create ServiceAccount
+# -----------------------------------------------------------------------------
+- name: Create Service Account for DB2 DMC
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: db2-dmc-sa
+        namespace: "{{ dmc_namespace }}"
+
+- name: Add privileged SCC to service account
+  ansible.builtin.command: oc adm policy add-scc-to-user privileged -n {{ dmc_namespace }} -z db2-dmc-sa
+  changed_when: false
+
+# Create Service and Route
+# -----------------------------------------------------------------------------
+- name: Apply Service
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: Service
+      metadata:
+        namespace: "{{ dmc_namespace }}"
+        name: mydmc-0-svc
+      spec:
+        selector:
+          app: db2-console
+        ports:
+          - protocol: TCP
+            port: 11081 # Assuming the port for Db2 Data Management Console
+            targetPort: 8443 # Assuming the port for Db2 Data Management Console
+
+- name: Apply Route
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: route.openshift.io/v1
+      kind: Route
+      metadata:
+        name: "mydmc-0"
+        namespace: "{{ dmc_namespace }}"
+      spec:
+        tls:
+          insecureEdgeTerminationPolicy: Redirect
+          termination: passthrough
+        to:
+          kind: Service
+          name: mydmc-0-svc
+        wildcardPolicy: None
+
+
+# - name: Apply ConfigMap (if needed)
+#   kubernetes.core.k8s:
+#     definition:
+#       apiVersion: v1
+#       kind: ConfigMap
+#       metadata:
+#         namespace: "{{ dmc_namespace }}"
+#         name: db2-console-configmap
+#       data:
+#         # Define your ConfigMap data here if needed
+#   when: namespace_created is changed
+
+# - name: Apply Secrets (if needed)
+#   kubernetes.core.k8s:
+#     definition:
+#       apiVersion: v1
+#       kind: Secret
+#       metadata:
+#         namespace: "{{ dmc_namespace }}"
+#         name: db2-console-secrets
+#       data:
+#         # Define your Secrets data here if needed
+#   when: namespace_created is changed
+
+- name: Apply PVC mydmc-pvc
+  kubernetes.core.k8s:
+    definition:
+      apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: mydmc-0-pvc
+        namespace: "{{ dmc_namespace }}"
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: ibmc-file-gold-gid
+        # volumeMode: Filesystem
+        resources:
+          requests:
+            storage: 100Mi
+
+- name: Wait for PVC to be ready
+  kubernetes.core.k8s_info:
+    kind: PersistentVolumeClaim
+    name: mydmc-0-pvc
+    namespace: "{{ dmc_namespace }}"
+  register: pvc_info
+  until: pvc_info.resources[0].status.phase == 'Bound'
+  retries: 15  # Total retries will be 15 * 20s = 300s (5 minutes)
+  delay: 20     # Wait for 20 seconds between each retry
+
+- name: Debug PVC
+  ansible.builtin.debug:
+    msg: "PVC is ready"
+
+- name: Apply Deployment db2-console-deployment
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        namespace: "{{ dmc_namespace }}"
+        name: mydmc
+      spec:
+        selector:
+          matchLabels:
+            app: db2-console
+        replicas: 1
+        template:
+          metadata:
+            labels:
+              app: db2-console
+          spec:
+            serviceAccount: db2-dmc-sa
+            containers:
+              - name: mydmc-0
+                securityContext:
+                  privileged: true
+                image: icr.io/cpopen/db2console/db2console:latest
+                imagePullPolicy: IfNotPresent
+                ports:
+                  - containerPort: 8443
+                env:
+                  - name: LICENSE
+                    value: "accept"
+                  - name: POD_NAME
+                    value: "mydmc-0"
+                volumeMounts:
+                  - name: mydmcvol
+                    mountPath: /mnt
+            securityContext:
+              runAsUser: 1001
+              runAsGroup: 1001
+            volumes:
+              - name: mydmcvol
+                persistentVolumeClaim:
+                  claimName: mydmc-0-pvc

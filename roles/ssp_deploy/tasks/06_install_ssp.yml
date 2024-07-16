@@ -1,0 +1,71 @@
+---
+- name: Define helm chart values
+  ansible.builtin.set_fact:
+    ssp_other_values:
+      persistence:
+        useDynamicProvisioning: "{{ 'true' if (ssp_use_dynamic_provisioning) else 'false' }}"
+
+- name: "Set fact helm file"
+  ansible.builtin.set_fact:
+    my_helmfile: "{{ my_workdir }}/ibm-ssp-engine-{{ compatibility_matrix[ssp_version].helm_version }}.tgz"
+    my_valuesfile: "{{ my_workdir }}/myssp_values-{{ my_serial }}.yml"
+
+- name: Generate my_values.yml
+  ansible.builtin.template:
+    src: "values.yml.j2"
+    dest: "{{ my_valuesfile }}"
+    mode: "0640"
+
+- name: Debug
+  ansible.builtin.debug:
+    msg:
+      - "Image Repository ................. {{ compatibility_matrix[ssp_version].image_repository }}"
+      - "Image Tag        ................. {{ compatibility_matrix[ssp_version].image_tag }}"
+      - "ssp_other_values  ................. {{ ssp_other_values }}"
+      - "helm install --timeout 10m0s -f {{ my_valuesfile }} -n {{ ssp_namespace }} s0 {{ my_helmfile }}"
+
+- name: Run Helm install command
+  ansible.builtin.command:
+    cmd: "helm install --timeout 10m0s -f {{ my_valuesfile }} -n {{ ssp_namespace }} s0 {{ my_helmfile }}"
+  register: helm_cout
+  changed_when: helm_cout.rc != 0
+
+# # https://docs.ansible.com/ansible/latest/collections/kubernetes/core/helm_module.html
+# - name: Deploy SEAS chart from local path
+#   kubernetes.core.helm:
+#     name: "s0"
+#     chart_ref: "{{ my_helmfile }}"
+#     release_namespace: "{{ ssp_namespace }}"
+#     wait: True
+#     timeout: "10m0s"
+#     values_files: "{{ my_valuesfile }}"
+
+- name: "Wait : Give 1 minute to container to be ready"
+  ansible.builtin.pause:
+    minutes: 1
+
+- name: "Lookup SSP Engine Pod"
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: "{{ ssp_namespace }}"
+    label_selectors:
+      - release=s0
+    wait: true
+    wait_sleep: 30
+    wait_timeout: 600 # 10 mins until we give up waiting for the pod to get into the expected state
+    wait_condition:
+      type: Ready
+      status: "True"
+  register: ssp_pod
+
+- name: Configure facts
+  ansible.builtin.set_fact:
+    ssp_pod_name: "{{ ssp_pod.resources[0].metadata.name }}"
+
+- name: "IBM Sterling Secure Proxy Summary:"
+  ansible.builtin.debug:
+    msg:
+      - "IBM Sterling SSP status ............................ Ready!"
+      - "SSP namespace ...................................... {{ ssp_namespace }}"
+      - "Pod name ........................................... {{ ssp_pod_name }}"
+      - "For username and password check secret ............. {{ ssp_secret }}'"

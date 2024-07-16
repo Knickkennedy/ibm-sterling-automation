@@ -1,0 +1,130 @@
+---
+# Environment variables
+# -----------------------------------------------------------------------------------------------------------------
+scc_instanceid: "{{ lookup('env', 'SCC_INSTANCEID') }}"
+entitled_registry_key: "{{ lookup('env', 'ENTITLED_REGISTRY_KEY') }}"
+scc_products: "{{ lookup('env', 'SCC_PRODUCTS') | default('', true) }}" # productEntitlement: "CCD,CCM"
+
+env_db2_namespace: "{{ lookup('env', 'DB2_NAMESPACE') }}"
+
+scc_licensetype: "{{ lookup('env', ' SCC_LICENSETYPE') | default('non-prod', true) }}" # prod or no-prod
+
+scc_system_passphrase: "{{ lookup('env', ' SCC_SYSTEM_PASSPHRASE') | default('passw0rd', true) }}"
+scc_admin: "{{ lookup('env', 'SCC_ADMIN') | default('admin', true) }}"
+scc_admin_password: "{{ lookup('env', ' SCC_ADMIN_PASSWORD') | default('passw0rd', true) }}"
+scc_truststore_password: "{{ lookup('env', ' SCC_TRUSTSTORE_PASSWORD') | default('changeit', true) }}"
+scc_keystore_password: "{{ lookup('env', ' SCC_KEYSTORE_PASSWORD') | default('changeit', true) }}"
+scc_userkey: "{{ lookup('env', ' SCC_EMAIL_PASSWORD') | default('passw0rd', true) }}"
+
+scc_dbvendor: "{{ lookup('env', ' SCC_DBVENDOR') }}"
+scc_dbhost: "{{ lookup('env', ' SCC_DBHOST') }}"
+scc_dbport: "{{ lookup('env', ' SCC_DBPORT') }}"
+scc_dbname: "{{ lookup('env', ' SCC_DBNAME') }}"
+scc_dbuser: "{{ lookup('env', ' SCC_DBUSER') }}"
+scc_dbpassword: "{{ lookup('env', ' SCC_DBPASSWORD') }}"
+
+scc_emailhostname: "{{ lookup('env', ' SCC_SMTPHOST') | default('smtp.company.com', true) }}"
+scc_emailport: "{{ lookup('env', ' SCC_SMTPPORT') | default('25', true) }}"
+scc_emailuser: "{{ scc_admin }}"
+scc_emailrespond: "{{ lookup('env', ' SCC_EMAIL_RESPOND') | default('noreply@company.com', true) }}"
+scc_ccadmin_emailaddress: "{{ lookup('env', ' SCC_ADMIN_MAILADDR') | default('admin@company.com', true) }}"
+scc_emailpassword: "{{ lookup('env', ' SCC_EMAIL_PASSWORD') | default('passw0rd', true) }}"
+scc_smtp_tlsenabled: "{{ lookup('env', ' SCC_SMTP_TLSENABLED') | default('false', true) }}"
+
+scc_jmsuser: "{{ lookup('env', ' SCC_JMS_USERNAME') }}"
+scc_jmspassword: "{{ lookup('env', ' SCC_JMS_PASSWORD') }}"
+scc_jmskeystorepassword: "{{ lookup('env', ' SCC_JMS_KEYSTORE_PASSWORD') }}"
+scc_jmstruststorepassword: "{{ lookup('env', ' SCC_JMS_TRUSTSTORE_PASSWORD') }}"
+
+scc_timezone: "{{ lookup('env', ' SCC_TIMEZONE') | default('America/New_York', true) }}"
+
+
+# Configure instance
+# -----------------------------------------------------------------------------
+scc_namespace: "ibm-scc-{{ scc_instanceid }}-app"
+scc_db2_namespace: "ibm-scc-{{ scc_instanceid }}-db2"
+scc_mq_namespace: "ibm-scc-{{ scc_instanceid }}-mq"
+
+scc_version: "6.3.1.0_2024-04-30"
+scc_products_upper: "{{ scc_products | upper }}"
+
+scc_dashboard: "true" # for ibm cloud environment
+scc_oc_route: "true"  # applicable for openshift environment for accessing UI
+
+entitled_registry: "cp.icr.io"
+entitled_registry_user: cp
+
+# Role Internal
+# -----------------------------------------------------------------------------
+my_workdir: /tmp
+
+scc_registry_secret: ibm-registry-secret
+scc_secret: ibm-scc-secret
+scc_cert_secret: ibm-scc-certs-secret
+
+scc_jms_secret: scc-jms-secret
+
+scc_name: "icc-{{ scc_instanceid }}"
+
+db2_namespace: ""
+db2_secret: mydb2-secret
+db2_id: mydb2
+
+# Compatibility Matrix
+# -----------------------------------------------------------------------------
+compatibility_matrix:
+  6.3.1.0_iFix02_2024-05-28:
+    helm_version: "3.1.3"
+    image_tag: "6.3.1.0_iFix02_2024-05-28"
+    copy_dbdriver_repository: "cp.icr.io/cp/ibm-scc/ibmscc_dbdrivers"
+    copy_dbdriver_tag: "2024"
+    copy_dbdriver_command: "cp /ibm/scc/resoures/dbdrivers/db2/luw/v11.5/v4.32.28/* /app/conf/"
+    kube_version: '>=1.23.0'
+  6.3.1.0_2024-04-30:
+    helm_version: "3.1.2"
+    image_tag: "6.3.1.0_2024-04-30"
+    copy_dbdriver_repository: "cp.icr.io/cp/ibm-scc/ibmscc_dbdrivers"
+    copy_dbdriver_tag: "2024"
+    copy_dbdriver_command: "cp /ibm/scc/resoures/dbdrivers/db2/luw/v11.5/v4.32.28/* /app/conf/"
+    kube_version: '>=1.23.0'
+
+
+# Storage Class Matrix - definition by Cloud Provider
+# -----------------------------------------------------------------------------
+storage_class_matrix:
+  ibmcloud:
+    rwx: "ibmc-file-gold-gid"   # ReadWriteMany
+    rwx_nogid: "ibmc-file-gold" # ReadWriteMany no GID
+    rwo: "ibmc-block-gold"   # ReadWriteOnce # IBM Sterling Control Center only works with ibmc-file-gold-gid
+    rom: "ibmc-file-gold-gid"   # ReadOnlyMany
+    rwop: ""                    # ReadWriteOncePod
+  redhat:
+    rwx: "ocs-storagecluster-cephfs"
+    rwx_nogid: "ocs-storagecluster-cephfs"
+    rwo: "ocs-storagecluster-cephfs" # "ocs-storagecluster-ceph-rbd"
+    rom: "ocs-storagecluster-cephfs"
+    rwop: ""
+  aws:
+    rwx: "efs"
+    rwx_nogid: "efs"
+    rwo: "gp2"
+    rom: ""
+    rwop: ""
+  azure:
+    rwx: "azurefiles-premium"
+    rwx_nogid: "azurefiles-premium"
+    rwo: "managed-premium"
+    rom: ""
+    rwop: ""
+  techzone:
+    rwx: "managed-nfs-storage"
+    rwx_nogid: "managed-nfs-storage"
+    rwo: "managed-nfs-storage"
+    rom: "managed-nfs-storage"
+    rwop: "managed-nfs-storage"
+  ibm-spectrum:
+    rwx: "scale-cnsa"
+    rwx_nogid: "scale-cnsa"
+    rwo: "scale-cnsa"
+    rom: "scale-cnsa"
+    rwop: "scale-cnsa"

@@ -1,0 +1,26 @@
+# Delete directories - BE CAREFULL
+#
+# ansible-playbook -i environments/hosts.development -u <username> -k playbooks/cleanup/cleanup-sb2bi-all.yml
+---
+- name: Cleanup Connect:Direct
+  hosts: sb2bi_servers
+  become: true
+  tasks:
+    - name: KillAll Java
+      ansible.builtin.command: killall -9 java
+      ignore_errors: true
+
+    - name: "Cleanup All directories"
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /opt/IBM/Binaries/si
+        - /opt/IBM/Binaries/sdk
+        - /opt/IBM/Binaries/IM_Linux
+        - /opt/IBM/InstallationManager
+        - /var/ibm/InstallationManager
+        - /opt/IBM/SterlingIntegrator
+        - /opt/IBM/IMShared
+        - /etc/.ibm
+        - /opt/IBM/ibm-java-80

@@ -1,0 +1,81 @@
+---
+# Environment variables
+# -----------------------------------------------------------------------------------------------------------------
+itx_rs_namespace: "{{ lookup('env', 'ITX_RS_NAMESPACE') }}"
+itx_rs_instanceid: "{{ lookup('env', 'ITX_RS_INSTANCEID') }}"
+entitled_registry_key: "{{ lookup('env', 'ENTITLED_REGISTRY_KEY') }}"
+
+itx_rs_version: "{{ lookup('env', 'ITX_RS_VERSION') | default('10.1.2.0.20231130', true) }}"
+
+itx_rs_sys_passphrase: "{{ lookup('env', 'ITX_RS_SYS_PASSPHRASE') | default('Passw0rd@', true) }}"
+
+# Storage configuration
+itx_rs_storage_class: "{{ lookup('env', 'ITX_RS_STORAGE_CLASS') }}"
+itx_rs_storage_capacity_data: "{{ lookup('env', 'ITX_RS_STORAGE_CAPACITY_DATA') | default('10Gi', true) }}"
+itx_rs_storage_capacity_logs: "{{ lookup('env', 'ITX_RS_STORAGE_CAPACITY_LOGS') | default('10Gi', true) }}"
+
+# CPU and memory limits configuration on the container
+itx_rs_cpu_limits: "{{ lookup('env', 'ITX_RS_CPU_LIMITS') | default('4000m', true) }}"
+itx_rs_mem_limits: "{{ lookup('env', 'ITX_RS_MEM_LIMITS') | default('16Gi', true) }}"
+
+# CPU and memory request configuration on the container
+itx_rs_cpu_requests: "{{ lookup('env', 'ITX_RS_CPU_REQUESTS') | default('1000m', true) }}"
+itx_rs_mem_requests: "{{ lookup('env', 'ITX_RS_MEM_REQUESTS') | default('4Gi', true) }}"
+
+# Configure instance
+# -----------------------------------------------------------------------------
+entitled_registry: "cp.icr.io"
+entitled_registry_user: cp
+
+# Role Internal
+# -----------------------------------------------------------------------------
+my_workdir: /tmp
+
+itx_rs_registry_secret: ibm-registry-secret
+itx_rs_secret: ibm-itx-rs-secret
+
+# https://github.com/IBM/charts/tree/master/repo/ibm-helm
+compatibility_matrix:
+  10.1.2.0.20231130:
+    helm_version: "2.1.0"
+    image_tag: "10.1.2.0.20231130"
+
+# Storage Class Matrix
+# -----------------------------------------------------------------------------
+storage_class_matrix:
+  ibmcloud:
+    rwx: "ibmc-file-gold-gid"   # ReadWriteMany
+    rwx_nogid: "ibmc-file-gold" # ReadWriteMany no GID
+    rwo: "ibmc-file-gold"       # ReadWriteOnce
+    rom: ""                     # ReadOnlyMany
+    rwop: ""                    # ReadWriteOncePod
+  redhat:
+    rwx: "ocs-storagecluster-cephfs"
+    rwx_nogid: "ocs-storagecluster-cephfs"
+    rwo: "ocs-storagecluster-cephfs" # "ocs-storagecluster-ceph-rbd"
+    rom: ""
+    rwop: ""
+  aws:
+    rwx: "efs"
+    rwx_nogid: "efs"
+    rwo: "gp2"
+    rom: ""
+    rwop: ""
+  azure:
+    rwx: "azurefiles-premium"
+    rwx_nogid: "azurefiles-premium"
+    rwo: "managed-premium"
+    rom: ""
+    rwop: ""
+  techzone:
+    rwx: "managed-nfs-storage"
+    rwx_nogid: "managed-nfs-storage"
+    rwo: "managed-nfs-storage"
+    rom: "managed-nfs-storage"
+    rwop: "managed-nfs-storage"
+  ibm-spectrum:
+    rwx: "scale-cnsa"
+    rwx_nogid: "scale-cnsa"
+    rwo: "scale-cnsa"
+    rom: "scale-cnsa"
+    rwop: "scale-cnsa"
