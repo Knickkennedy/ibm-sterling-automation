@@ -1,0 +1,87 @@
+#!/bin/sh
+
+source /database/config/{{ db2_user }}/sqllib/db2profile
+
+function db2_verify_and_start {
+
+    if ! db2gcf -s | grep Available >/dev/null; then
+
+        db2_kill
+        db2_k=$?
+
+        ipclean -a
+
+        db2start
+        db2_start=$?
+        
+        echo ""
+        echo "db2_verify_and_start: db2_kill=$db2_k |db2start=$db2_start "
+        if [ "$db2_start" -ne  "0" ]; then
+            echo "db2_verify_and_start: ERROR - error detected "
+            exit 1
+        fi
+
+        echo ""
+        echo "db2_verify_and_start: Check if DB2 is Available "
+        counter=0
+        max_checks=5
+        interval=30
+
+        while [ $counter -lt $max_checks ]; do
+            if db2gcf -s | grep Available >/dev/null; then
+                echo "db2_verify_and_start: DB2 is Avaliable "
+                break  # Exit loop if condition is met
+            else
+                echo "db2_verify_and_start: DB2 is starting. Waiting $interval seconds before next check... "
+                sleep $interval
+                counter=$((counter + 1))
+            fi
+        done
+
+        if [ $counter -eq $max_checks ]; then
+            echo "db2_verify_and_start: ERROR: DB2 is NOT Avaliable. Please check. "
+            exit 2
+        fi
+
+    fi
+
+}
+
+function create_b2bi_db {
+
+    tar -xzvf /database/config/{{ db2_user }}/b2b_prebuiltdb.tar.gz --directory /tmp
+    tar_x=$?
+
+    echo ""
+    echo "create_b2bi_db: $tar_x"
+    if [ $tar_x -ne 0 ]; then
+        echo "create_b2bi_db: ERROR - Failed to run 'tar -xzvf b2b_prebuiltdb.tar.gz' "
+        exit 2
+    fi
+
+cat << EOF > /tmp/create_b2bi_db2.sql
+CREATE DATABASE {{ db2_dbname }} AUTOMATIC STORAGE YES USING CODESET UTF-8 TERRITORY US COLLATE USING IDENTITY PAGESIZE 4096 DFT_EXTENT_SZ 32;
+EOF
+
+    echo ""
+    if [ ! -f "/tmp/create_b2bi_db2.sql" ]; then
+        echo "create_b2bi_db: ERROR - Cannot generate create_b2bi_db2.sql "
+        exit 1
+    fi
+
+    echo "create_b2bi_db: File /tmp/create_b2bi_db2.sql created sucessfully "
+
+    db2 -tvf /tmp/create_b2bi_db2.sql -z /tmp/create_b2bi_db2.sql.log
+}
+
+########################## Main Part of Shell Script ##########################
+echo "Start of script setupdb.sh"
+echo ""
+
+echo "Starting db2 - db2_verify_and_start"
+db2_verify_and_start
+echo ""
+
+echo "Creating Sterling B2Bi Database - create_b2bi_db"
+create_b2bi_db
+echo ""

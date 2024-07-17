@@ -76,6 +76,7 @@
     container: "{{ db2_container }}"
     command: "su - {{ db2_user }} -c 'pwd && ./createdb.sh | tee createdb.log' "
   ignore_errors: true
+  register: ignore_errors_register
 
 - name: Wait for database to be created successfully before continuing
   ansible.builtin.pause:

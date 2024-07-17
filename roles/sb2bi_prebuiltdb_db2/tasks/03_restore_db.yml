@@ -5,6 +5,13 @@
     dest: "{{ my_workdir }}/restoredb.sh"
     mode: "777"
 
+- name: Create createdb script in local /tmp
+  ansible.builtin.template:
+    src: createdb.sh.j2
+    dest: "{{ my_workdir }}/createdb.sh"
+    mode: "777"
+
+
 # Debug
 # -----------------------------------------------------------------------------
 - name: "Debug information - part 2"
@@ -23,6 +30,18 @@
     container: "{{ db2_container }}"
     local_path: "{{ my_workdir }}/restoredb.sh"
     remote_path: "/database/config/{{ db2_user }}/restoredb.sh"
+    no_preserve: true
+    state: to_pod
+  register: cout_k8s_cp1
+  retries: 10
+
+- name: Copy the second Script into the mydb2-0 pod
+  kubernetes.core.k8s_cp:
+    namespace: "{{ db2_namespace }}"
+    pod: "{{ db2_pod_name }}"
+    container: "{{ db2_container }}"
+    local_path: "{{ my_workdir }}/createdb.sh"
+    remote_path: "/database/config/{{ db2_user }}/createdb.sh"
     no_preserve: true
     state: to_pod
   register: cout_k8s_cp1
@@ -65,22 +84,32 @@
     command: "su - {{ db2_user }} -c 'source /database/config/{{ db2_user }}/sqllib/db2profile && echo $PATH | tee setprofile.log' "
   register: cout_setprofile
 
+- name: Run createdb to prepare Db2 for use with IBM Sterling
+  kubernetes.core.k8s_exec:
+    namespace: "{{ db2_namespace }}"
+    pod: "{{ db2_pod_name }}"
+    container: "{{ db2_container }}"
+    command: "su - {{ db2_user }} -c 'pwd && ./createdb.sh | tee createdb.log' "
+  ignore_errors: true
+  register: ignore_errors_register
+
+- name: Wait for database to be created successfully before continuing
+  ansible.builtin.pause:
+    minutes: 10
+
+- name: Run db2profile to set environmnet for DB2
+  kubernetes.core.k8s_exec:
+    namespace: "{{ db2_namespace }}"
+    pod: "{{ db2_pod_name }}"
+    container: "{{ db2_container }}"
+    command: "su - {{ db2_user }} -c 'source /database/config/{{ db2_user }}/sqllib/db2profile && echo $PATH | tee setprofile.log' "
+  register: cout_setprofile
+
 - name: Run restoredb to prepare Db2 for use with IBM Sterling
   kubernetes.core.k8s_exec:
     namespace: "{{ db2_namespace }}"
     pod: "{{ db2_pod_name }}"
     container: "{{ db2_container }}"
     command: "su - {{ db2_user }} -c 'pwd && ./restoredb.sh | tee restoredb.log' "
+  ignore_errors: true
   register: cout_restoredb
-
-- name: "Database restoredb debug information"
-  ansible.builtin.debug:
-    msg:
-      - "Result (stdout) ........................ {{ cout_restoredb.stdout }}"
-      - "result (stderr) ........................ {{ cout_restoredb.stderr }}"
-
-- name: "Failed to execute the script"
-  ansible.builtin.fail:
-    msg: "Failed to execute the script restoredb.sh h on DB2 instance"
-  when:
-    - cout_restoredb.rc != 0

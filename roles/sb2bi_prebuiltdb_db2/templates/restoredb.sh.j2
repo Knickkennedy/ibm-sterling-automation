@@ -108,8 +108,6 @@ function create_b2bi_db {
     fi
 
 cat << EOF > /tmp/restore_b2bi_db2.sql
-CREATE DATABASE {{ db2_dbname }} AUTOMATIC STORAGE YES USING CODESET UTF-8 TERRITORY US COLLATE USING IDENTITY PAGESIZE 4096 DFT_EXTENT_SZ 32;
-
 RESTORE DATABASE {{ db2_dbname }} from /tmp into {{ db2_dbname }} without prompting;
 
 CONNECT TO {{ db2_dbname }};
