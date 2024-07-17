@@ -5,6 +5,12 @@
     dest: "{{ my_workdir }}/setupdb.sh"
     mode: "777"
 
+- name: Create createdb script in local /tmp
+  ansible.builtin.template:
+    src: createdb.sh.j2
+    dest: "{{ my_workdir }}/createdb.sh"
+    mode: "777"
+
 # Debug
 # -----------------------------------------------------------------------------
 - name: "Debug information - part 2"
@@ -23,6 +29,19 @@
     container: "{{ db2_container }}"
     local_path: "{{ my_workdir }}/setupdb.sh"
     remote_path: "/database/config/{{ db2_user }}/setupdb.sh"
+    no_preserve: true
+    state: to_pod
+  register: cout_k8s_cp
+  retries: 10
+  delay: 30 # seconds
+
+- name: Copy the createdb script into the mydb2-0 pod
+  kubernetes.core.k8s_cp:
+    namespace: "{{ db2_namespace }}"
+    pod: "{{ db2_pod_name }}"
+    container: "{{ db2_container }}"
+    local_path: "{{ my_workdir }}/createdb.sh"
+    remote_path: "/database/config/{{ db2_user }}/createdb.sh"
     no_preserve: true
     state: to_pod
   register: cout_k8s_cp
@@ -49,12 +68,36 @@
 
 # need to add db2profile to run db2 commands
 # oc exec -n {{ db2_namespace }} {{ db2_pod_name }} -- su -lc '/tmp/setupdb.sh | tee /tmp/setupdb.log' {{ db2_user }}
+- name: Run createdb to prepare Db2 for use with IBM Sterling
+  kubernetes.core.k8s_exec:
+    namespace: "{{ db2_namespace }}"
+    pod: "{{ db2_pod_name }}"
+    container: "{{ db2_container }}"
+    command: "su - {{ db2_user }} -c 'pwd && ./createdb.sh | tee createdb.log' "
+  ignore_errors: true
+  register: cout_createdb
+
+- name: Wait for database to be created successfully before continuing
+  ansible.builtin.pause:
+    minutes: 5
+
+- name: Run db2profile to set environmnet for DB2
+  kubernetes.core.k8s_exec:
+    namespace: "{{ db2_namespace }}"
+    pod: "{{ db2_pod_name }}"
+    container: "{{ db2_container }}"
+    command: "su - {{ db2_user }} -c 'source /database/config/{{ db2_user }}/sqllib/db2profile && echo $PATH | tee setprofile.log' "
+  register: cout_setprofile
+
+# need to add db2profile to run db2 commands
+# oc exec -n {{ db2_namespace }} {{ db2_pod_name }} -- su -lc '/tmp/setupdb.sh | tee /tmp/setupdb.log' {{ db2_user }}
 - name: Run setupdb to prepare Db2 for use with IBM Sterling
   kubernetes.core.k8s_exec:
     namespace: "{{ db2_namespace }}"
     pod: "{{ db2_pod_name }}"
     container: "{{ db2_container }}"
     command: "su - {{ db2_user }} -c 'pwd && ./setupdb.sh | tee setupdb.log' "
+  ignore_errors: true
   register: cout_setupdb
 
 - name: "Database setup debug information"
