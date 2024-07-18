@@ -5,7 +5,7 @@ image:
   tag: "{{ compatibility_matrix[scc_version].image_tag }}"
   imageSecrets: "{{ scc_registry_secret }}"
   digest:
-    enabled: true
+    enabled: false
     value: sha256:e25fa783f8659271007a46246ed2a1d2ea592eb100c4cae8d2f92e4b5ba5ca68
   pullPolicy: IfNotPresent
 
@@ -142,7 +142,7 @@ extraInitContainers:
     tag: "{{ compatibility_matrix[scc_version].copy_dbdriver_tag }}"
     imageSecrets: "{{ scc_registry_secret }}"
     pullPolicy: IfNotPresent
-    command: "cp /ibm/scc/resoures/dbdrivers/db2/luw/v11.5/v4.32.28/* /app/conf/"
+    command: "cp -r /ibm/scc/resoures/dbdrivers/db2/luw/v11.5/v4.32.28/* /app/conf"
     digest:
       enabled: false
       value: ""
@@ -175,7 +175,7 @@ persistentVolumeCCM:
     value: ""
 
 persistentVolumeUserInputs:
-  enabled: true
+  enabled: false
   claimName: ""
   #if claim name is not given and enabled is true then next 3 properties are required
   storageClassName: "{{ storage_class_matrix[scc_storage_class].rwo | default('manual') }}"
