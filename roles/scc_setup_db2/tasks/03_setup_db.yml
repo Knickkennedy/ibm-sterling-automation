@@ -11,6 +11,12 @@
     dest: "{{ my_workdir }}/createdb.sh"
     mode: "777"
 
+- name: Create createdb script in local /tmp
+  ansible.builtin.template:
+    src: createsccddb.sh.j2
+    dest: "{{ my_workdir }}/createsccddb.sh"
+    mode: "777"
+
 # Debug
 # -----------------------------------------------------------------------------
 - name: "Debug information - part 2"
@@ -29,6 +35,19 @@
     container: "{{ db2_container }}"
     local_path: "{{ my_workdir }}/setupdb.sh"
     remote_path: "/database/config/{{ db2_user }}/setupdb.sh"
+    no_preserve: true
+    state: to_pod
+  register: cout_k8s_cp
+  retries: 10
+  delay: 30 # seconds
+
+- name: Copy the setupsccddb script into the mydb2-0 pod
+  kubernetes.core.k8s_cp:
+    namespace: "{{ db2_namespace }}"
+    pod: "{{ db2_pod_name }}"
+    container: "{{ db2_container }}"
+    local_path: "{{ my_workdir }}/createsccddb.sh"
+    remote_path: "/database/config/{{ db2_user }}/createsccddb.sh"
     no_preserve: true
     state: to_pod
   register: cout_k8s_cp
@@ -79,7 +98,28 @@
 
 - name: Wait for database to be created successfully before continuing
   ansible.builtin.pause:
-    minutes: 5
+    minutes: 10
+
+- name: Run db2profile to set environmnet for DB2
+  kubernetes.core.k8s_exec:
+    namespace: "{{ db2_namespace }}"
+    pod: "{{ db2_pod_name }}"
+    container: "{{ db2_container }}"
+    command: "su - {{ db2_user }} -c 'source /database/config/{{ db2_user }}/sqllib/db2profile && echo $PATH | tee setprofile.log' "
+  register: cout_setprofile
+
+- name: Run createsccddb to prepare Db2 for use with IBM Sterling
+  kubernetes.core.k8s_exec:
+    namespace: "{{ db2_namespace }}"
+    pod: "{{ db2_pod_name }}"
+    container: "{{ db2_container }}"
+    command: "su - {{ db2_user }} -c 'pwd && ./createsccddb.sh | tee createsccddb.log' "
+  ignore_errors: true
+  register: cout_createsccddb
+
+- name: Wait for sccd database to be created successfully before continuing
+  ansible.builtin.pause:
+    minutes: 10
 
 - name: Run db2profile to set environmnet for DB2
   kubernetes.core.k8s_exec:

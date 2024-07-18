@@ -5,8 +5,8 @@ image:
   tag: "{{ compatibility_matrix[scc_version].image_tag }}"
   imageSecrets: "{{ scc_registry_secret }}"
   digest:
-    enabled: false
-    value: ""
+    enabled: true
+    value: sha256:e25fa783f8659271007a46246ed2a1d2ea592eb100c4cae8d2f92e4b5ba5ca68
   pullPolicy: IfNotPresent
 
 nameOverride: "" 

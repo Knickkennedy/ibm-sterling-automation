@@ -47,24 +47,22 @@ function db2_verify_and_start {
 
 }
 
-function create_sccm_db {
+function create_sccd_db {
 
-cat << EOF > /tmp/initiate_sccm_db2.sql
-CREATE DATABASE SCCM AUTOMATIC STORAGE YES USING CODESET UTF-8 TERRITORY US COLLATE USING SYSTEM PAGESIZE 32768;
+cat << EOF > /tmp/initiate_sccd_db2.sql
+CREATE DATABASE SCCD AUTOMATIC STORAGE YES USING CODESET UTF-8 TERRITORY US COLLATE USING SYSTEM PAGESIZE 32768;
 EOF
 
     echo ""
-    if [ ! -f "/tmp/initiate_sccm_db2.sql" ]; then
-        echo "initiate_sccm_db: ERROR - Cannot generate initiate_sccm_db2.sql "
+    if [ ! -f "/tmp/initiate_sccd_db2.sql" ]; then
+        echo "initiate_sccd_db: ERROR - Cannot generate initiate_sccd_db2.sql "
         exit 1
     fi
     
-    echo "initiate_sccm_db: File /tmp/initiate_sccm_db2.sql created sucessfully "
+    echo "initiate_sccd_db: File /tmp/initiate_sccd_db2.sql created sucessfully "
 
-    db2 -tvf /tmp/initiate_sccm_db2.sql -z /tmp/initiate_sccm_db2.sql.log 
+    db2 -tvf /tmp/initiate_sccd_db2.sql -z /tmp/initiate_sccd_db2.sql.log 
 }
-
-
 
 ########################## Main Part of Shell Script ##########################
 echo "Start of script setupdb.sh"
@@ -74,11 +72,10 @@ echo "Starting db2 - db2_verify_and_start"
 db2_verify_and_start
 echo ""
 
-
-# Steps for SCC Monitor
+# Steps for SCC director
 # -----------------------------------------------------------------------------
-{% if scc_install_monitor %}
-echo "Creating IBM Sterling Control Center Database - create_sccm_db"
-create_sccm_db
+{% if scc_install_director %}
+echo "Creating IBM Sterling Control Center Database - create_sccd_db"
+create_sccd_db
 echo ""
 {% endif %}

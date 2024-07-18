@@ -80,7 +80,7 @@
 
 - name: Wait for database to be created successfully before continuing
   ansible.builtin.pause:
-    minutes: 5
+    minutes: 10
 
 - name: Run db2profile to set environmnet for DB2
   kubernetes.core.k8s_exec:
