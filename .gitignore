@@ -27,7 +27,6 @@ roles/sb2bi_prebuiltdb_db2/files/*
 roles/ibm/sb2b/dev-*.yml
 roles/ibm/sb2b/edge-routes-*.txt
 roles/ibm/sb2b/service-key_*.json
-roles/ibm-sb2b-*.tar.gz
 roles/ibm/sb2b/runAnsibl*.sh
 build/bin/downloads/*.tgz
 
