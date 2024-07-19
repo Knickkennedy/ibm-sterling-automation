@@ -40,7 +40,7 @@
   ansible.builtin.pause:
     minutes: 1
 
-- name: Run db2profile to set environmnet for DB2
+- name: Run db2profile to set environment for DB2
   kubernetes.core.k8s_exec:
     namespace: "{{ db2_namespace }}"
     pod: "{{ db2_pod_name }}"
