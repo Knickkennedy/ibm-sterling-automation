@@ -43,7 +43,7 @@ cdws_use_dynamic_provisioning: false
 # Helm Variables
 # -----------------------------------------------------------------------------
 cdws_helm:
-  release: "s0"
+  release: "s1"
   timeout: "10m0s"
   values_yaml: "{{ my_workdir }}/mycdws_values.yml"
   chart: "{{ my_workdir }}/ibm-cdws/"
