@@ -6,10 +6,6 @@
       - java-1.8.0-openjdk.x86_64
     state: present
   become: true
-- name: Install ansible galaxy subdependencies
-  ansible.builtin.shell: |
-    ansible-galaxy collection install community.general
-  changed_when: false
 - name: "Switch python version to latest installed"
   community.general.alternatives:
     name: python3

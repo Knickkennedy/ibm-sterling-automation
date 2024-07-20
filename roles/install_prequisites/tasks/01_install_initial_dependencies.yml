@@ -1,0 +1,5 @@
+---
+- name: Install ansible galaxy subdependencies
+  ansible.builtin.shell: |
+    ansible-galaxy collection install community.general
+  changed_when: false

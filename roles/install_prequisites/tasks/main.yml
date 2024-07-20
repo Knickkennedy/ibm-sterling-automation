@@ -1,3 +1,5 @@
 ---
+- name: Check ansible dependencies
+  ansible.builtin.include_tasks: 01_install_initial_dependencies.yml
 - name: Check for required environment variables
-  ansible.builtin.include_tasks: 01_install_prequisites.yml
+  ansible.builtin.include_tasks: 02_install_ansible_prequisites.yml
