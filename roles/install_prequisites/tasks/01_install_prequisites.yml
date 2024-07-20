@@ -5,9 +5,11 @@
       - python >= 3.10
       - java-1.8.0-openjdk.x86_64
     state: present
+  become: true
 - name: "Install python modules required to run playbooks"
   ansible.builtin.pip:
     name:
       - kubernetes >= 24.2.0
       - PyYAML >= 3.11
       - jsonpatch
+  become: true
