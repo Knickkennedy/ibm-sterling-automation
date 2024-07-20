@@ -12,6 +12,7 @@
     path: /usr/bin/python3.12
     link: /usr/bin/python3
     state: selected
+  become: true
 - name: "Install python modules required to run playbooks"
   ansible.builtin.pip:
     name:
