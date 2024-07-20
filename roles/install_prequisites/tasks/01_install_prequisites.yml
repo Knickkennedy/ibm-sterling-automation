@@ -1,6 +1,6 @@
 ---
 - name: "Update install node versions if required"
-  ansible.builtin.package:
+  ansible.builtin.dnf:
     name:
       - python3.10
       - java-1.8.0-openjdk.x86_64
