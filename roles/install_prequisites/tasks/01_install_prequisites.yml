@@ -2,7 +2,7 @@
 - name: "Update install node versions if required"
   ansible.builtin.package:
     name:
-      - python >= 3.10
+      - python3.10
       - java-1.8.0-openjdk.x86_64
     state: present
   become: true
