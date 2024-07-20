@@ -1,6 +1,9 @@
 #!/bin/sh
 
-sudo dnf install -y python3.12 python3.12-pip java-1.8.0-openjdk.x86_64 helm
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+sudo dnf install -y python3.12 python3.12-pip java-1.8.0-openjdk.x86_64
 sudo alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1
 sudo alternatives --set python3 /usr/bin/python3.12
 ansible-galaxy collection install kubernetes.core
