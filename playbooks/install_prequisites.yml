@@ -1,5 +1,5 @@
 ---
-- name: Deploy IBM Sterling Connect:Direct on RedHat OpenShift
+- name: Install Prequisites
   hosts: localhost
   connection: local
   gather_facts: false
