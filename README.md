@@ -13,11 +13,6 @@ Firstly, make sure you have git installed, and go to the terminal of your machin
 git clone https://github.com/Knickkennedy/ibm-sterling-automation.git
 ```
 
-Next install ansible using whatever package manager your machine requires. Example for techzone/fedora bastion nodes:
-```shell
-sudo dnf install -y ansible-core
-```
-
 Once you've cloned your repo locally, move your terminal into the root directory of the project
 ```shell
 cd ibm-sterling-automation
