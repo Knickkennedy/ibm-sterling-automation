@@ -354,7 +354,7 @@ asi:
     annotations: {}  
   
   backendService:
-    type: LoadBalancer
+    type: NodePort
     sessionAffinity: None
     sessionAffinityConfig:
       timeoutSeconds: 10800
@@ -368,9 +368,9 @@ asi:
       #  protocol: TCP
     portRanges:
       - name: adapters
-        portRange: 30351-30353
-        targetPortRange: 30351-30353
-        nodePortRange: 30351-30353
+        portRange: 30361-30363
+        targetPortRange: 30361-30363
+        nodePortRange: 30361-30363
         protocol: TCP
       #- name: adapters
       #  portRange: 30501-30600
@@ -422,9 +422,9 @@ asi:
       #    servicePort: "my-http"
       #    enableHttps: false
     external:
-      host: ""
+      host: 
       tls:
-        enabled: true
+        enabled: false
         secretName: ""
       extraPaths: []
       #  - routePrefix: "hello"
@@ -544,6 +544,14 @@ asi:
   networkPolicies:
     ingress:
       customPolicies:
+      - name: np-ingress-allow-asi-adapter
+        ports:
+          - protocol: TCP
+            port: 30361
+          - protocol: TCP
+            port: 30362
+          - protocol: TCP
+            port: 30363  
       #- name:
       #  fromSelectors:
       #  - namespaceSelector:
@@ -617,7 +625,7 @@ ac:
     annotations: {}  
       
   backendService:
-    type: LoadBalancer
+    type: NodePort
     sessionAffinity: None
     sessionAffinityConfig:
       timeoutSeconds: 10800
@@ -631,9 +639,9 @@ ac:
       #  protocol: TCP
     portRanges:
       - name: adapters
-        portRange: 30501-30600
-        targetPortRange: 30501-30600
-        nodePortRange: 30501-30600
+        portRange: 30351-30353
+        targetPortRange: 30351-30353
+        nodePortRange: 30351-30353
         protocol: TCP
     loadBalancerIP:  
     loadBalancerSourceRanges: []
@@ -668,9 +676,9 @@ ac:
       #    servicePort: "my-http"
       #    enableHttps: false
     external:
-      host: ""
+      host: 
       tls:
-        enabled: true
+        enabled: false
         secretName: ""
       extraPaths: []
       #  - routePrefix: "hello"
@@ -780,6 +788,14 @@ ac:
   networkPolicies:
     ingress:
       customPolicies:
+      - name: np-ingress-allow-ac-adapter
+        ports:
+          - protocol: TCP
+            port: 30351
+          - protocol: TCP
+            port: 30352
+          - protocol: TCP
+            port: 30353
       #- name:
       #  fromSelectors:
       #  - namespaceSelector:
