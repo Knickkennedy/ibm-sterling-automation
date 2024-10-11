@@ -34,9 +34,31 @@
       purge:
         schedule: "0 0 * * *"
 
+- name: "Extract Helm chart"
+  ansible.builtin.command: "tar -xzvf {{ my_workdir }}/ibm-b2bi-prod-{{ compatibility_matrix[si_version].helm_version }}.tgz -C {{ my_workdir }}"
+  register: untar_cout
+  changed_when: ( untar_cout.rc == 0)
+   
+#- name: "check working directory"
+#  ansible.builtin.command: "pwd"
+#  register: pwd_cout
+#  changed_when: ( pwd_cout.rc == 0)
+  
+- name: Debug copy command
+  ansible.builtin.debug:
+    msg: 
+      - "cp ../roles/sb2bi_deploy/files/dynamicclasspath.cfg.in {{ my_workdir }}/ibm-b2bi-prod/config/"
+#      - "{{ pwd_cout }}"
+
+- name: "Inject dynamicclasspath.cfg.in"
+  ansible.builtin.command: "cp ../roles/sb2bi_deploy/files/dynamicclasspath.cfg.in {{ my_workdir }}/ibm-b2bi-prod/config/"
+  register: cp_cout
+  changed_when: ( cp_cout.rc == 0)
+    
 - name: "Set fact helm file"
   ansible.builtin.set_fact:
-    my_helmfile: "{{ my_workdir }}/ibm-b2bi-prod-{{ compatibility_matrix[si_version].helm_version }}.tgz"
+#  my_helmfile: "{{ my_workdir }}/ibm-b2bi-prod-{{ compatibility_matrix[si_version].helm_version }}.tgz"
+    my_helmfile: "{{ my_workdir }}/ibm-b2bi-prod"
     my_valuesfile: "{{ my_workdir }}/myb2bi_values-{{ my_serial }}.yml"
 
 - name: Generate my_values.yml

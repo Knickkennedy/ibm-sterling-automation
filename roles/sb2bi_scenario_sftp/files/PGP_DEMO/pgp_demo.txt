@@ -1,0 +1,4 @@
+This is a PGP demo file.
+
+If you can see this is unencrypted.
+

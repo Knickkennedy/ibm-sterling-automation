@@ -1,0 +1,17 @@
+# Configure B2bi instance
+# -----------------------------------------------------------------------------------------------------------------
+si_instanceid: "{{ lookup('env', 'SI_INSTANCEID') }}"
+si_namespace: "sterling-b2bi-{{ si_instanceid }}-app"
+
+si_system_passphrase: "{{ lookup('env', 'SI_SYSTEM_PASSPHRASE') | default('passw0rd', true) }}"
+si_resource_file: "{{ lookup('env', 'SI_RESOURCE_FILE') }}"
+si_resource_passphrase: "{{ lookup('env', 'SI_RESOURCE_PASSPHRASE') | default('passw0rd', true) }}"
+
+#si_sftp_resources_file: "{{ lookup('env', 'SI_SFTP_RESOURCES_FILE') }}"
+si_sftp_resources_file: sfgSFTPDemoScenario.xml
+si_pgp_resources_file: PGP_DEMO_export.xml
+
+si_container: "asi" 
+# Others
+# -----------------------------------------------------------------------------
+my_workdir: /tmp

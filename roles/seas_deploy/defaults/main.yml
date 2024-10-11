@@ -75,3 +75,8 @@ storage_class_matrix:
     rwo: "scale-cnsa"
     rom: "scale-cnsa"
     rwop: "scale-cnsa"
+  ibm-crc:
+    rwx: "crc-csi-hostpath-provisioner"
+    rwx_nogid: "crc-csi-hostpath-provisioner"
+    rwo: "crc-csi-hostpath-provisioner"
+    rom: "crc-csi-hostpath-provisioner"

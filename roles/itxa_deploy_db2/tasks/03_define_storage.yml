@@ -55,6 +55,13 @@
   when:
     - my_storage_class is not defined
     - "'scale-cnsa' in my_storage_list"
+    
+- name: Check for OpenShift Local Automatic StorageClass
+  ansible.builtin.set_fact:
+    my_storage_class: "ibm-crc"
+  when:
+    - my_storage_class is not defined
+    - "'crc-csi-hostpath-provisioner' in my_storage_list"
 
 # 2. Non-Dynamic Provisioning
 # -----------------------------------------------------------------------------

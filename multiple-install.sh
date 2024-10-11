@@ -10,6 +10,7 @@ ansible-galaxy collection install kubernetes.core
 
 ansible-playbook playbooks/install_prequisites.yml
 ansible-playbook playbooks/deploy_sb2b_prebuiltdb.yml & \
+#ansible-playbook playbooks/deploy_itx_rs.yml & \
 ansible-playbook playbooks/deploy_cd.yml & \
 ansible-playbook playbooks/deploy_cdws.yml & \
 ansible-playbook playbooks/deploy_ssp.yml & \
