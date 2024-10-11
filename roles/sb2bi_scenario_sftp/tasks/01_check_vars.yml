@@ -1,0 +1,12 @@
+---
+- name: "Fail if si_namespace is not provided"
+  ansible.builtin.assert:
+    that:
+      - si_namespace is defined and si_namespace != ""
+    fail_msg: "si_namespace property is required"
+
+- name: "Fail if SI_SFTP_RESOURCES_FILE is not provided"
+  ansible.builtin.assert:
+    that:
+      - si_sftp_resources_file is defined and si_sftp_resources_file != ""
+    fail_msg: "si_sftp_resources_file property is required"

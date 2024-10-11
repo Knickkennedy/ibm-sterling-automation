@@ -1,0 +1,92 @@
+---
+#- name: Create importResources script in local /tmp
+#  ansible.builtin.template:
+#    src: importResources.sh.j2
+#    dest: "{{ my_workdir }}/importResources.sh"
+#    mode: "777"
+
+# Debug
+# -----------------------------------------------------------------------------
+- name: "Debug information - part 2"
+  ansible.builtin.debug:
+    msg:
+      - "SI namespace .......................... {{ si_namespace }}"
+      - "SI Pod name ........................... {{ si_pod_name }}"
+      - "SI Container name ..................... {{ si_container }}"
+
+#- name: Copy the Script into the s0-b2bi-asi-server-0 pod
+#  kubernetes.core.k8s_cp:
+#    namespace: "{{ si_namespace }}"
+#    pod: "{{ si_pod_name }}"
+#    container: "{{ si_container }}"
+#    local_path: "{{ my_workdir }}/importResources.sh"
+#    remote_path: "/tmp/importResources.sh"
+#    no_preserve: true
+#    state: to_pod
+#  register: cout_k8s_cp1
+#  retries: 10
+
+#- name: "Copy Script failed"
+#  ansible.builtin.fail:
+#    msg:
+#      - "Result (cout_k8s_cp) ........................ {{ cout_k8s_cp1 }} "
+#  when: cout_k8s_cp1.result.find('successfully copied') == -1
+
+
+- name: Create security context for the passphrase "passw0rd" that the import FSA will use
+  kubernetes.core.k8s_exec:
+    namespace: "{{ si_namespace }}"
+    pod: "{{ si_pod_name }}"
+    container: "{{ si_container }}"
+    command: "/ibm/b2bi/install/bin/securityContext.sh set DemoContext demoIdentity passw0rd | tee setContext.log"
+  ignore_errors: true
+  register: ignore_errors_register
+  
+- name: "Create security context failed"
+  ansible.builtin.fail:
+    msg:
+      - "Result (ignore_errors_register) ........................ {{ ignore_errors_register }} "
+  when: ignore_errors_register.stdout.find('Context saved') == -1
+  
+- name: Copy the SFTP Resources file into the s0-b2bi-asi-server-0 pod
+  kubernetes.core.k8s_cp:
+    namespace: "{{ si_namespace }}"
+    pod: "{{ si_pod_name }}"
+    container: "{{ si_container }}"
+    local_path: "{{ si_sftp_resources_file }}"
+    remote_path: "/tmp/resourceImport/b2bi_resources.xml"
+    no_preserve: true
+    state: to_pod
+  register: cout_k8s_cp2
+  retries: 10
+  delay: 30 # seconds
+
+- name: "Copy the resources xml failed"
+  ansible.builtin.fail:
+    msg:
+      - "Result (cout_k8s_cp) ........................ {{ cout_k8s_cp2 }} "
+  when: cout_k8s_cp2.result.find('successfully copied') == -1
+
+- name: Copy the PGP Resources file into the s0-b2bi-asi-server-0 pod
+  kubernetes.core.k8s_cp:
+    namespace: "{{ si_namespace }}"
+    pod: "{{ si_pod_name }}"
+    container: "{{ si_container }}"
+    local_path: "{{ si_pgp_resources_file }}"
+    remote_path: "/tmp/resourceImport/b2bi_resources2.xml"
+    no_preserve: true
+    state: to_pod
+  register: cout_k8s_cp3
+  retries: 10
+  delay: 30 # seconds
+
+- name: "Copy the pgp resources xml failed"
+  ansible.builtin.fail:
+    msg:
+      - "Result (cout_k8s_cp) ........................ {{ cout_k8s_cp3 }} "
+  when: cout_k8s_cp3.result.find('successfully copied') == -1
+
+#- name: "Wait for restoredb.sh available"
+#  ansible.builtin.pause:
+#    minutes: 1
+

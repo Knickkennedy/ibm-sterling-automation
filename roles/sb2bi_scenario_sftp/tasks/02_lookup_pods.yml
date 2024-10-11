@@ -1,0 +1,35 @@
+---
+- name: "Lookup SI Pod"
+  kubernetes.core.k8s_info:
+    kind: Pod
+    namespace: "{{ si_namespace }}"
+    name: "s0-b2bi-asi-server-0"
+#    label_selectors: 
+#      - app.kubernetes.io/component: = "asi-server"
+ #     - statefulset.kubernetes.io/pod-name= "s0-b2bi-asi-server-0"
+    wait: true
+    wait_sleep: 30
+    wait_timeout: 600 # 10 mins until we give up waiting for the pod to get into the expected state
+    wait_condition:
+      type: Ready
+      status: "True"
+  register: si_pod
+
+- name: Configure facts si_pod_name
+  ansible.builtin.set_fact:
+    si_pod_name: "{{ si_pod.resources[0].metadata.name }}"
+  when:
+    - (si_pod is defined) and (si_pod.resources[0].metadata.name != "")
+
+- name: "Debug information - part 2"
+  ansible.builtin.debug:
+    msg:
+      - "SI namespace .......................... {{ si_namespace }}"
+#      - "si_pod.......................... {{ si_pod }}"
+      - "si_pod_name.......................... {{ si_pod_name }}"
+      
+- name: "Failed to get Pod Name"
+  ansible.builtin.fail:
+    msg: "Failed to execute the script /tmp/importResources.sh on SI instance"
+  when:
+    - si_pod_name is not defined

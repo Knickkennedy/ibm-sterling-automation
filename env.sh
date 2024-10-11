@@ -1,5 +1,5 @@
 
-export ENTITLED_REGISTRY_KEY=
+export ENTITLED_REGISTRY_KEY=<your key here>
 export ANSIBLE_CONFIG=./ansible.cfg
 export SI_INSTANCEID=dev01
 export SI_VERSION=6.2.0.2
@@ -12,3 +12,6 @@ export CDWS_NAMESPACE=sterling-cdnode01-dev
 export SCC_INSTANCEID=dev01
 export SCC_PRODUCTS=CCM,CCD
 export SSP_INSTANCEID=dev01
+export ITX_RS_NAMESPACE=demoitx
+export ITX_RS_INSTANCEID=itx
+export ITX_RS_SYS_PASSPHRASE=Passw0rd!

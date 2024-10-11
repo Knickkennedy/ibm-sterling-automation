@@ -32,7 +32,7 @@ global:
       #     endPort: 8450  
       
     egress:
-      enabled: true
+      enabled: false
       customPolicies:
       #- name:
       #  toSelectors:
@@ -63,13 +63,23 @@ serviceAccount:
   name: default
 
 resourcesInit:
-  enabled: true 
+  enabled: true
   image:
-    repository: "cp.icr.io/cp/ibm-b2bi/b2bi-resources"
-    tag: "{{ compatibility_matrix[ si_version ].resourcesInit.image.tag | default('') }}"
-    digest:
+    repository: "quay.io/pnuw_ibm"
+    name: "b2bi-init"
+    tag: "1.0"
+    digest: 
     pullPolicy: "IfNotPresent"
   command:
+
+#resourcesInit:
+#  enabled: true 
+#  image:
+#    repository: "cp.icr.io/cp/ibm-b2bi/b2bi-resources"
+#    tag: "{{ compatibility_matrix[ si_version ].resourcesInit.image.tag | default('') }}"
+#    digest:
+#    pullPolicy: "IfNotPresent"
+#  command:
 
 persistence:
   enabled: true
