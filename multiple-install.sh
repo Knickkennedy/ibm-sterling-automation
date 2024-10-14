@@ -3,7 +3,7 @@
 curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
 chmod 700 get_helm.sh
 ./get_helm.sh
-sudo dnf install -y ansible-core python3.12 python3.12-pip java-1.8.0-openjdk.x86_64 python3-pip
+sudo dnf install -y ansible-core java-1.8.0-openjdk.x86_64 python3-pip
 ansible-galaxy collection install kubernetes.core:4.0.0
 
 pip install kubernetes
