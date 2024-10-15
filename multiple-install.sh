@@ -8,6 +8,10 @@ ansible-galaxy collection install kubernetes.core:4.0.0
 
 pip install kubernetes
 
+#fix permission issues in new TZ environment
+sudo chmod 755 /usr/local/bin/helm
+chmod 755 ./roles/sb2bi_prebuiltdb_db2/files/b2bi6202.tar.gz
+
 ansible-playbook playbooks/deploy_sb2b_prebuiltdb.yml & \
 #ansible-playbook playbooks/deploy_itx_rs.yml & \
 ansible-playbook playbooks/deploy_cd.yml & \
