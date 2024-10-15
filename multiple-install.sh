@@ -7,6 +7,7 @@ sudo dnf install -y ansible-core java-1.8.0-openjdk.x86_64 python3-pip
 ansible-galaxy collection install kubernetes.core:4.0.0
 
 pip install kubernetes
+
 #fix permission issues in new TZ environment
 sudo chmod 755 /usr/local/bin/helm
 chmod 755 ./roles/sb2bi_prebuiltdb_db2/files/b2bi6202.tar.gz
@@ -18,4 +19,3 @@ ansible-playbook playbooks/deploy_cd.yml & \
 ansible-playbook playbooks/deploy_ssp.yml & \
 ansible-playbook playbooks/tools/kafka.yml & \
 ansible-playbook playbooks/tools/minio.yml &
-
