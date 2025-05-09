@@ -104,6 +104,12 @@ storage_class_matrix:
     rwo: "ocs-storagecluster-cephfs" # "ocs-storagecluster-ceph-rbd"
     rom: "ocs-storagecluster-cephfs"
     rwop: ""
+  redhat-external:
+    rwx: "ocs-external-storagecluster-cephfs"
+    rwx_nogid: "ocs-external-storagecluster-cephfs"
+    rwo: "ocs-external-storagecluster-cephfs" # "ocs-storagecluster-ceph-rbd"
+    rom: "ocs-external-storagecluster-cephfs"
+    rwop: ""
   aws:
     rwx: "efs"
     rwx_nogid: "efs"
